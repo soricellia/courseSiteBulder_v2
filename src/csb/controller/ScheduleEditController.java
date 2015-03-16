@@ -68,6 +68,9 @@ public class ScheduleEditController {
             itemToEdit.setDescription(si.getDescription());
             itemToEdit.setDate(si.getDate());
             itemToEdit.setLink(si.getLink());
+            
+            //update gui
+            course.getScheduleItems().set(course.getScheduleItems().indexOf(itemToEdit), si);
         }
         else {
             // THE USER MUST HAVE PRESSED CANCEL, SO
@@ -108,6 +111,7 @@ public class ScheduleEditController {
     
     public void handleEditLectureRequest(CSB_GUI gui, Lecture itemToEdit) {
         CourseDataManager cdm = gui.getDataManager();
+        Course course = cdm.getCourse();
         ld.showEditLectureDialog(itemToEdit);
         
         // DID THE USER CONFIRM?
@@ -116,6 +120,10 @@ public class ScheduleEditController {
             Lecture lecture = ld.getLecture();
             itemToEdit.setTopic(lecture.getTopic());
             itemToEdit.setSessions(lecture.getSessions());
+            
+            //update gui
+            course.getLectures().set(course.getLectures().indexOf(itemToEdit), lecture);
+        
         }
         else {
             // THE USER MUST HAVE PRESSED CANCEL, SO
@@ -148,6 +156,10 @@ public class ScheduleEditController {
             assignmentToEdit.setName(assignment.getName());
             assignmentToEdit.setDate(assignment.getDate());
             assignmentToEdit.setTopics(assignment.getTopics());
+            
+            //update gui
+            course.getAssignments().set(course.getAssignments().indexOf(assignmentToEdit), assignment);
+        
         }
         else {
             // THE USER MUST HAVE PRESSED CANCEL, SO
@@ -192,11 +204,22 @@ public class ScheduleEditController {
         //MAKE SURE THIS IS NOT THE FIRST LECTURE
         int index = course.getLectures().indexOf(lecture);
         if(index>0){
-        //SWITCH SELECTED LECTURE WITH THE LECTURE RIGHT ABOVE IT IF IT EXISTS    
-        Lecture tempLecture = course.getLectures().get(index-1);
-        course.getLectures().set(index-1, lecture);
-        course.getLectures().set(index, tempLecture);
-       
+            //SWITCH SELECTED LECTURE WITH THE LECTURE RIGHT ABOVE IT IF IT EXISTS    
+            Lecture tempLecture = course.getLectures().get(index-1);
+            course.getLectures().set(index-1, lecture);
+            course.getLectures().set(index, tempLecture);
+        }
+    }
+    public void handleMoveLectureDownRequest(CSB_GUI gui, TableView<Lecture> lectureTable, Course course) {
+      
+        Lecture lecture = lectureTable.getSelectionModel().getSelectedItem();
+        //MAKE SURE THIS IS NOT THE LAST LECTURE
+        int index = course.getLectures().indexOf(lecture);
+        if(index < course.getLectures().size()){
+            //SWITCH SELECTED LECTURE WITH THE LECTURE RIGHT ABOVE IT IF IT EXISTS    
+            Lecture tempLecture = course.getLectures().get(index+1);
+            course.getLectures().set(index+1, lecture);
+            course.getLectures().set(index, tempLecture);
         }
     }
 }

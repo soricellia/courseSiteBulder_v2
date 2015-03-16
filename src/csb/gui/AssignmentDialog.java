@@ -1,8 +1,8 @@
 package csb.gui;
 
 import csb.CSB_PropertyType;
+import csb.data.Assignment;
 import csb.data.Course;
-import csb.data.ScheduleItem;
 import static csb.gui.CSB_GUI.CLASS_HEADING_LABEL;
 import static csb.gui.CSB_GUI.CLASS_PROMPT_LABEL;
 import static csb.gui.CSB_GUI.PRIMARY_STYLE_SHEET;
@@ -24,20 +24,20 @@ import properties_manager.PropertiesManager;
  *
  * @author McKillaGorilla
  */
-public class ScheduleItemDialog  extends Stage {
+public class AssignmentDialog  extends Stage {
     // THIS IS THE OBJECT DATA BEHIND THIS UI
-    ScheduleItem scheduleItem;
+    Assignment assignment;
     
     // GUI CONTROLS FOR OUR DIALOG
     GridPane gridPane;
     Scene dialogScene;
     Label headingLabel;
-    Label descriptionLabel;
-    TextField descriptionTextField;
+    Label nameLabel;
+    TextField nameTextField;
     Label dateLabel;
     DatePicker datePicker;
-    Label urlLabel;
-    TextField urlTextField;
+    Label topicsLabel;
+    TextField topicsTextField;
     Button completeButton;
     Button cancelButton;
     
@@ -47,12 +47,12 @@ public class ScheduleItemDialog  extends Stage {
     // CONSTANTS FOR OUR UI
     public static final String COMPLETE = "Complete";
     public static final String CANCEL = "Cancel";
-    public static final String DESCRIPTION_PROMPT = "Description: ";
-    public static final String DATE_PROMPT = "Date";
-    public static final String URL_PROMPT = "URL";
-    public static final String SCHEDULE_ITEM_HEADING = "Schedule Item Details";
-    public static final String ADD_SCHEDULE_ITEM_TITLE = "Add New Schedule Item";
-    public static final String EDIT_SCHEDULE_ITEM_TITLE = "Edit Schedule Item";
+    public static final String NAME_PROMPT = "Name: ";
+    public static final String DATE_PROMPT = "Due Date:";
+    public static final String TOPICS_PROMPT = "Topics: ";
+    public static final String ASSIGNMENT_HEADING = "Assignment Details";
+    public static final String ADD_ASSIGNMENT_TITLE = "Add New Assignment";
+    public static final String EDIT_ASSIGNMENT_TITLE = "Edit Assignment";
     /**
      * Initializes this dialog so that it can be used for either adding
      * new schedule items or editing existing ones.
@@ -60,7 +60,7 @@ public class ScheduleItemDialog  extends Stage {
      * 
      * @param primaryStage The owner of this modal dialog.
      */
-    public ScheduleItemDialog(Stage primaryStage, Course course,  MessageDialog messageDialog) {       
+    public AssignmentDialog(Stage primaryStage, Course course,  MessageDialog messageDialog) {       
         // MAKE THIS DIALOG MODAL, MEANING OTHERS WILL WAIT
         // FOR IT WHEN IT IS DISPLAYED
         initModality(Modality.WINDOW_MODAL);
@@ -74,15 +74,15 @@ public class ScheduleItemDialog  extends Stage {
         
         // PUT THE HEADING IN THE GRID, NOTE THAT THE TEXT WILL DEPEND
         // ON WHETHER WE'RE ADDING OR EDITING
-        headingLabel = new Label(SCHEDULE_ITEM_HEADING);
+        headingLabel = new Label(ASSIGNMENT_HEADING);
         headingLabel.getStyleClass().add(CLASS_HEADING_LABEL);
     
-        // NOW THE DESCRIPTION 
-        descriptionLabel = new Label(DESCRIPTION_PROMPT);
-        descriptionLabel.getStyleClass().add(CLASS_PROMPT_LABEL);
-        descriptionTextField = new TextField();
-        descriptionTextField.textProperty().addListener((observable, oldValue, newValue) -> {
-            scheduleItem.setDescription(newValue);
+        // NOW THE NAME
+        nameLabel = new Label(NAME_PROMPT);
+        nameLabel.getStyleClass().add(CLASS_PROMPT_LABEL);
+        nameTextField = new TextField();
+        nameTextField.textProperty().addListener((observable, oldValue, newValue) -> {
+            assignment.setName(newValue);
         });
         
         // AND THE DATE
@@ -97,16 +97,16 @@ public class ScheduleItemDialog  extends Stage {
                 messageDialog.show(props.getProperty(CSB_PropertyType.ILLEGAL_DATE_MESSAGE));
             }             
             else {
-                scheduleItem.setDate(datePicker.getValue());
+                assignment.setDate(datePicker.getValue());
             }
         });
         
-        // AND THE URL
-        urlLabel = new Label(URL_PROMPT);
-        urlLabel.getStyleClass().add(CLASS_PROMPT_LABEL);
-        urlTextField = new TextField();
-        urlTextField.textProperty().addListener((observable, oldValue, newValue) -> {
-            scheduleItem.setLink(newValue);
+        // AND THE TOPIC
+        topicsLabel = new Label(TOPICS_PROMPT);
+        topicsLabel.getStyleClass().add(CLASS_PROMPT_LABEL);
+        topicsTextField = new TextField();
+        topicsTextField.textProperty().addListener((observable, oldValue, newValue) -> {
+            assignment.setTopics(newValue);
         });
         
         // AND FINALLY, THE BUTTONS
@@ -116,20 +116,20 @@ public class ScheduleItemDialog  extends Stage {
         // REGISTER EVENT HANDLERS FOR OUR BUTTONS
         EventHandler completeCancelHandler = (EventHandler<ActionEvent>) (ActionEvent ae) -> {
             Button sourceButton = (Button)ae.getSource();
-            ScheduleItemDialog.this.selection = sourceButton.getText();
-            ScheduleItemDialog.this.hide();
+            AssignmentDialog.this.selection = sourceButton.getText();
+            AssignmentDialog.this.hide();
         };
         completeButton.setOnAction(completeCancelHandler);
         cancelButton.setOnAction(completeCancelHandler);
 
         // NOW LET'S ARRANGE THEM ALL AT ONCE
         gridPane.add(headingLabel, 0, 0, 2, 1);
-        gridPane.add(descriptionLabel, 0, 1, 1, 1);
-        gridPane.add(descriptionTextField, 1, 1, 1, 1);
-        gridPane.add(dateLabel, 0, 2, 1, 1);
-        gridPane.add(datePicker, 1, 2, 1, 1);
-        gridPane.add(urlLabel, 0, 3, 1, 1);
-        gridPane.add(urlTextField, 1, 3, 1, 1);
+        gridPane.add(nameLabel, 0, 1, 1, 1);
+        gridPane.add(nameTextField, 1, 1, 1, 1);
+        gridPane.add(topicsLabel, 0, 2, 1, 1);
+        gridPane.add(topicsTextField, 1, 2, 1, 1);
+        gridPane.add(dateLabel, 0, 3, 1, 1);
+        gridPane.add(datePicker, 1, 3, 1, 1);
         gridPane.add(completeButton, 0, 4, 1, 1);
         gridPane.add(cancelButton, 1, 4, 1, 1);
 
@@ -149,8 +149,8 @@ public class ScheduleItemDialog  extends Stage {
         return selection;
     }
     
-    public ScheduleItem getScheduleItem() { 
-        return scheduleItem;
+    public Assignment getAssignment() { 
+        return assignment;
     }
     
     /**
@@ -159,44 +159,44 @@ public class ScheduleItemDialog  extends Stage {
      * 
      * @param message Message to appear inside the dialog.
      */
-    public ScheduleItem showAddScheduleItemDialog(LocalDate initDate) {
+    public Assignment showAddAssignmentDialog(LocalDate initDate) {
         // SET THE DIALOG TITLE
-        setTitle(ADD_SCHEDULE_ITEM_TITLE);
+        setTitle(ADD_ASSIGNMENT_TITLE);
         
-        // RESET THE SCHEDULE ITEM OBJECT WITH DEFAULT VALUES
-        scheduleItem = new ScheduleItem();
-        
+        // RESET THE ASSIGNMENT OBJECT WITH DEFAULT VALUES
+        assignment = new Assignment();
         // LOAD THE UI STUFF
-        descriptionTextField.setText(scheduleItem.getDescription());
+        // LOAD THE UI STUFF
+        nameTextField.setText(assignment.getName());
         datePicker.setValue(initDate);
-        urlTextField.setText(scheduleItem.getLink());
-        
+        topicsTextField.setText(assignment.getTopics());       
+    
         // AND OPEN IT UP
         this.showAndWait();
         
-        return scheduleItem;
+        return assignment;
     }
     
     public void loadGUIData() {
         // LOAD THE UI STUFF
-        descriptionTextField.setText(scheduleItem.getDescription());
-        datePicker.setValue(scheduleItem.getDate());
-        urlTextField.setText(scheduleItem.getLink());       
+        nameTextField.setText(assignment.getName());
+        datePicker.setValue(assignment.getDate());
+        topicsTextField.setText(assignment.getTopics());       
     }
     
     public boolean wasCompleteSelected() {
         return selection.equals(COMPLETE);
     }
     
-    public void showEditScheduleItemDialog(ScheduleItem itemToEdit) {
+    public void showEditAssignmentDialog(Assignment itemToEdit) {
         // SET THE DIALOG TITLE
-        setTitle(EDIT_SCHEDULE_ITEM_TITLE);
+        setTitle(EDIT_ASSIGNMENT_TITLE);
         
         // LOAD THE SCHEDULE ITEM INTO OUR LOCAL OBJECT
-        scheduleItem = new ScheduleItem();
-        scheduleItem.setDescription(itemToEdit.getDescription());
-        scheduleItem.setDate(itemToEdit.getDate());
-        scheduleItem.setLink(itemToEdit.getLink());
+        assignment = new Assignment();
+        assignment.setName(itemToEdit.getName());
+        assignment.setDate(itemToEdit.getDate());
+        assignment.setTopics(itemToEdit.getTopics());
         
         // AND THEN INTO OUR GUI
         loadGUIData();

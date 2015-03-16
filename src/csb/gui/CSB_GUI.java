@@ -391,11 +391,11 @@ public class CSB_GUI implements CourseDataView {
         fridayCheckBox.setSelected(courseToReload.hasLectureDay(DayOfWeek.FRIDAY));
         
         // THE SCHEDULE ITEMS TABLE
-       
+        scheduleItemsTable.setItems(courseToReload.getScheduleItems());
         // THE LECTURES TABLE
-        
+        lectureTable.setItems(courseToReload.getLectures());
         // THE HWS TABLE
-
+        assignmentTable.setItems(courseToReload.getAssignments());
         // NOW WE DO WANT TO RESPOND WHEN THE USER INTERACTS WITH OUR CONTROLS
         courseController.enable(true);
     }
@@ -447,6 +447,7 @@ public class CSB_GUI implements CourseDataView {
         course.selectLectureDay(DayOfWeek.WEDNESDAY, wednesdayCheckBox.isSelected());
         course.selectLectureDay(DayOfWeek.THURSDAY, thursdayCheckBox.isSelected());
         course.selectLectureDay(DayOfWeek.FRIDAY, fridayCheckBox.isSelected());
+       
     }
 
     /****************************************************************************/
@@ -690,6 +691,7 @@ public class CSB_GUI implements CourseDataView {
         assignmentTable.getColumns().add(assignmentNameColumn);
         assignmentTable.getColumns().add(assignmentTopicsColumn);
         assignmentTable.getColumns().add(assignmentDateColumn);
+        assignmentTable.setItems(dataManager.getCourse().getAssignments());
         // NOW LET'S ASSEMBLE ALL THE CONTAINERS TOGETHER
 
         // THIS IS FOR STUFF IN THE TOP OF THE SCHEDULE PANE, WE NEED TO PUT TWO THINGS INSIDE
@@ -837,6 +839,47 @@ public class CSB_GUI implements CourseDataView {
                 scheduleController.handleEditScheduleItemRequest(this, si);
             }
         });
+        
+        //NOW THE LECTURE ADDING AND EDITING CONTROLS
+        addLectureButton.setOnAction(e->{
+            scheduleController.handleAddLectureRequest(this);
+        });
+        removeLectureButton.setOnAction(e->{
+            scheduleController.handleRemoveLectureRequest(this, lectureTable.getSelectionModel().getSelectedItem());
+        });
+        lectureUpButton.setOnAction(e->{
+            scheduleController.handleMoveLectureUpRequest(this, lectureTable,dataManager.getCourse());
+        });
+        lectureDownButton.setOnAction(e->{
+            scheduleController.handleMoveLectureDownRequest(this, lectureTable, dataManager.getCourse());
+        });
+        
+        //AND NOW THE LECTURE TABLE
+        lectureTable.setOnMouseClicked(e->{
+            if(e.getClickCount() == 2){
+                //OPEN UP ASSISNGMENT EDITOR
+                Lecture lecture = lectureTable.getSelectionModel().getSelectedItem();
+                scheduleController.handleEditLectureRequest(this, lecture);
+            }    
+        });
+        
+        //NOW THE ASSIGNMENT ADDING AND EDITING CONTROLS
+        addAssignmentButton.setOnAction(e-> {
+            scheduleController.handleAddAssignmentRequest(this);
+        });
+        removeAssignmentButton.setOnAction(e->{
+            scheduleController.handleRemoveAssignmentRequest(this, assignmentTable.getSelectionModel().getSelectedItem());
+        });
+        
+        //AND NOW THE ASSIGNMENT TABLE
+        assignmentTable.setOnMouseClicked(e->{
+            if(e.getClickCount() == 2){
+                //OPEN UP ASSISNGMENT EDITOR
+                Assignment assignment=assignmentTable.getSelectionModel().getSelectedItem();
+                scheduleController.handleEditAssignmentRequest(this, assignment);
+            }    
+        });
+        
     }
 
     // REGISTER THE EVENT LISTENER FOR A TEXT FIELD
