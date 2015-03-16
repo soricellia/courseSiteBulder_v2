@@ -166,7 +166,6 @@ public class AssignmentDialog  extends Stage {
         // RESET THE ASSIGNMENT OBJECT WITH DEFAULT VALUES
         assignment = new Assignment();
         // LOAD THE UI STUFF
-        // LOAD THE UI STUFF
         nameTextField.setText(assignment.getName());
         datePicker.setValue(initDate);
         topicsTextField.setText(assignment.getTopics());       

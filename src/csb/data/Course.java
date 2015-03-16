@@ -231,6 +231,7 @@ public class Course {
 
     public void addAssignment(Assignment a) {
         assignments.add(a);
+        Collections.sort(assignments);
     }
 
     public ObservableList<Assignment> getAssignments() {
@@ -239,6 +240,7 @@ public class Course {
 
     public void removeAssignment(Assignment assignmentToRemove) {
         assignments.remove(assignmentToRemove);
+        Collections.sort(assignments);
     }
 
     public HashMap<LocalDate, ScheduleItem> getScheduleItemMappings() {
@@ -248,5 +250,20 @@ public class Course {
             holidayDates.put(scheduleItem.getDate(), scheduleItem);
         }
         return holidayDates;
+    }
+     public HashMap<LocalDate, Assignment> getAssignmentMappings() {
+        // GET THE ASSIGNMENT DATES FOR QUICK LOOKUP
+        HashMap<LocalDate, Assignment> assignmentDates = new HashMap();
+        for (Assignment assignment : assignments) {
+            assignmentDates.put(assignment.getDate(), assignment);
+        }
+        return assignmentDates;
+    }
+    public List<Lecture> getLectureList(){
+        List<Lecture> lectureList = new ArrayList<>();
+        for (Lecture lecture : lectures) {
+            lectureList.add(lecture);
+        }
+        return lectureList;
     }
 }

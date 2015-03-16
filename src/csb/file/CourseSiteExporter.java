@@ -15,7 +15,10 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
+import javafx.collections.ObservableList;
 import javax.swing.text.html.HTML;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -52,6 +55,7 @@ public class CourseSiteExporter {
     public static final String ID_NAVBAR = "navbar";
     public static final String ID_BANNER = "banner";
     public static final String ID_SCHEDULE = "schedule";
+    public static final String ID_HWS = "hws";
     public static final String ID_HOME_LINK = "home_link";
     public static final String ID_SYLLABUS_LINK = "syllabus_link";
     public static final String ID_SCHEDULE_LINK = "schedule_link";
@@ -65,8 +69,8 @@ public class CourseSiteExporter {
     public static final String CLASS_HOLIDAY = "holiday";
     public static final String CLASS_LECTURE = "lecture";
     public static final String CLASS_HW = "hw";
-    public static final String CLASS_HWS = "hw";
-
+    public static final String CLASS_HWS = "hws";
+    
     // THIS IS TEXT WE'LL BE ADDING TO OUR PAGE
     public static final String INDEX_HEADER = "Home";
     public static final String SYLLABUS_HEADER = "Syllabus";
@@ -80,7 +84,8 @@ public class CourseSiteExporter {
     public static final String FRIDAY_HEADER = "FRIDAY";
     public static final String LECTURE_HEADER = "Lecture ";
     public static final String DUE_HEADER = "due @ 11:59pm";
-
+    public static final String DUE_TIME = " @11:59pm";
+    public static final String DEFAULT_GRADING_TEXT = "TBD";
     // THESE ARE THE POSSIBLE SITE PAGES OUR SCHEDULE PAGE
     // MAY NEED TO LINK TO
     public static String INDEX_PAGE = "index.html";
@@ -94,10 +99,20 @@ public class CourseSiteExporter {
     public static final String IMAGES_DIR = "images";
 
     // AND SOME TEXT WE'LL NEED TO ADD ON THE FLY
+    public static final String CONT_LECTURE = " (Continuted)";
+    public static final String OPEN_PARENTH = "(";
+    public static final String CLOSE_PARENTH = ")";
+    public static final String COMMA = ", ";
     public static final String SLASH = "/";
     public static final String DASH = " - ";
     public static final String LINE_BREAK = "<br />";
 
+    //THIS IS TO CHANGE THE HOMEWORK PAGES TABEL COLOR
+    public static final int BASE_RED = 240;
+    public static final int BASE_GREEN = 240;
+    public static final int BASE_BLUE = 255;
+    public static final String COLOR_STYLE = "background-color:rgb";
+    
     // THESE ARE THE DIRECTORIES WHERE OUR BASE SCHEDULE
     // FILE IS AND WHERE OUR COURSE SITES WILL BE EXPORTED TO
     String baseDir;
@@ -266,7 +281,7 @@ public class CourseSiteExporter {
     private Document buildSyllabusPage(Course courseToExport) throws SAXException, TransformerException, IOException, ParserConfigurationException {
         // GET A NEW DOC
         Document doc = initDoc(courseToExport, CoursePage.SYLLABUS, SYLLABUS_PAGE);
-        
+
         // NOW DO THE STUFF SPECIFIC TO AN INDEX PAGE
         // @todo
         // AND RETURN THE FULL PAGE DOM
@@ -277,25 +292,83 @@ public class CourseSiteExporter {
     private Document buildSchedulePage(Course courseToExport) throws SAXException, TransformerException, IOException, ParserConfigurationException {
         // GET A NEW DOC
         Document scheduleDoc = initDoc(courseToExport, CoursePage.SCHEDULE, SCHEDULE_PAGE);
-
-        // NOW BUILD THE SCHEDULE TABLE
-        fillScheduleTable(scheduleDoc, courseToExport);
-
+        try {
+            // NOW BUILD THE SCHEDULE TABLE
+            fillScheduleTable(scheduleDoc, courseToExport);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         // AND RETURN THE FULL PAGE DOM
         return scheduleDoc;
     }
 
     // BUILDS A HWS PAGE AND RETURNS IT AS A SINGLE Document
     private Document buildHWsPage(Course courseToExport) throws SAXException, TransformerException, IOException, ParserConfigurationException {
+        
         // GET A NEW DOC
         Document hwsDoc = initDoc(courseToExport, CoursePage.HWS, HWS_PAGE);
-
+        
+        for(int x = 0 ; x < courseToExport.getAssignments().size() ; x++){
+            Node homeWorkTable = getNodeWithId(hwsDoc,HTML.Tag.TABLE.toString(),ID_HWS);
+            //FIRST CREATE TR
+            Element trElement = hwsDoc.createElement(HTML.Tag.TR.toString());
+            trElement.setAttribute(HTML.Attribute.CLASS.toString(), CLASS_HWS);
+            setColorStyle(trElement,BASE_RED-(x*10),BASE_GREEN-(x*10),BASE_BLUE-(x*10));
+            
+            //NOW CREATE TD TO HOLD NAME AND TOPIC
+             Element nameAndTopicTd = hwsDoc.createElement(HTML.Tag.TD.toString());
+            nameAndTopicTd.appendChild(hwsDoc.createElement(HTML.Tag.BR.toString()));
+            nameAndTopicTd.setAttribute(HTML.Attribute.CLASS.toString(), CLASS_HWS);
+            Text nameAndTopicText = hwsDoc.createTextNode(courseToExport.getAssignments().get(x).getName()
+                +DASH+courseToExport.getAssignments().get(x).getTopics());
+            nameAndTopicTd.appendChild(nameAndTopicText);
+            nameAndTopicTd.appendChild(hwsDoc.createElement(HTML.Tag.BR.toString()));
+            nameAndTopicTd.appendChild(hwsDoc.createElement(HTML.Tag.BR.toString()));
+            
+            //NOW CREATE TD TO HOLD DUE DATE
+            Element dueDateTd = hwsDoc.createElement(HTML.Tag.TD.toString());
+            dueDateTd.appendChild(hwsDoc.createElement(HTML.Tag.BR.toString()));
+            dueDateTd.setAttribute(HTML.Attribute.CLASS.toString(), CLASS_HWS);
+            Text dueDateText = hwsDoc.createTextNode(courseToExport.getAssignments().get(x).getDate().getDayOfWeek()
+                    .toString().charAt(0)
+                +courseToExport.getAssignments().get(x).getDate().getDayOfWeek().toString()
+                    .substring(1,courseToExport.getAssignments().get(x).getDate().getDayOfWeek().toString().length()).toLowerCase()
+                +COMMA
+                +courseToExport.getAssignments().get(x).getDate().getMonthValue()
+                +SLASH
+                +courseToExport.getAssignments()
+                    .get(x).getDate().getDayOfMonth()+DUE_TIME);
+            
+            dueDateTd.appendChild(dueDateText);
+            dueDateTd.appendChild(hwsDoc.createElement(HTML.Tag.BR.toString()));
+            dueDateTd.appendChild(hwsDoc.createElement(HTML.Tag.BR.toString()));
+            
+            //NOW CREATE TD TO HOLD GRADING CRITERIA
+            Element gradingTd = hwsDoc.createElement(HTML.Tag.TD.toString());
+            gradingTd.appendChild(hwsDoc.createElement(HTML.Tag.BR.toString()));
+            gradingTd.setAttribute(HTML.Attribute.CLASS.toString(), CLASS_HWS);
+            Text gradingText = hwsDoc.createTextNode(DEFAULT_GRADING_TEXT);
+            gradingTd.appendChild(gradingText);
+            gradingTd.appendChild(hwsDoc.createElement(HTML.Tag.BR.toString()));
+            gradingTd.appendChild(hwsDoc.createElement(HTML.Tag.BR.toString()));
+            
+            //NOW ADD IT ALL TO TR
+            trElement.appendChild(nameAndTopicTd);
+            trElement.appendChild(dueDateTd);
+            trElement.appendChild(gradingTd);
+            
+            //FINALLY ADD TR TO TABLE
+            
+            homeWorkTable.appendChild(trElement);
+        }
+        
         // MISSING UPDATING THE TABLE
-
         // AND RETURN THE FULL PAGE DOM
         return hwsDoc;
     }
-
+    private void setColorStyle(Element element, int red,int green, int blue){
+        element.setAttribute(HTML.Attribute.STYLE.toString(), COLOR_STYLE+OPEN_PARENTH+red+COMMA+green+COMMA+blue+CLOSE_PARENTH);
+    }
     // BUILDS A HWS PAGE AND RETURNS IT AS A SINGLE Document
     private Document buildProjectsPage(Course courseToExport) throws SAXException, TransformerException, IOException, ParserConfigurationException {
         // GET A NEW DOC
@@ -353,7 +426,16 @@ public class CourseSiteExporter {
     private void fillScheduleTable(Document scheduleDoc, Course courseToExport) {
         LocalDate countingDate = courseToExport.getStartingMonday().minusDays(0);
         int lectureCounter = 1;
+        int homeWorkCounter = 1;
         HashMap<LocalDate, ScheduleItem> scheduleItemMappings = courseToExport.getScheduleItemMappings();
+        HashMap<LocalDate, Assignment> assignmentMappings = courseToExport.getAssignmentMappings();
+
+        //THIS IS FOR ADDING LECTURES
+        List<Lecture> lectureList = courseToExport.getLectureList();
+        ListIterator lectureIterator = lectureList.listIterator();
+        Lecture lecture = (Lecture) lectureIterator.next();
+        int numberOfSessionsRemaining = lecture.getSessions();
+        boolean isMoreSessions = true;
 
         while (countingDate.isBefore(courseToExport.getEndingFriday())
                 || countingDate.isEqual(courseToExport.getEndingFriday())) {
@@ -400,9 +482,83 @@ public class CourseSiteExporter {
                 } else {
                     // SET THE DATE TO A REGULAR DAY
                     dayCell.setAttribute(HTML.Attribute.CLASS.toString(), CLASS_SCH);
+
+                    //numberOfSessionsRemaining WILL ONLY BE 0 WHEN THERE ARE NO MORE LECTURES
+                    if (courseToExport.hasLectureDay(countingDate.getDayOfWeek()) && numberOfSessionsRemaining > 0) {
+
+                        //CREATE A SPAN TO HOLD LECTURE DATA
+                        Element lectureSpanElement = scheduleDoc.createElement(HTML.Tag.SPAN.toString());
+                        lectureSpanElement.setAttribute(HTML.Attribute.CLASS.toString(), CLASS_LECTURE);
+                        Text lectureNumberText = scheduleDoc.createTextNode(LECTURE_HEADER + lectureCounter);
+                        
+                        //ADD LECTURE TOPIC TO SPAN
+                        lectureSpanElement.appendChild(lectureNumberText);
+
+                        //CREATE A LINE BREAK ELEMENT 
+                        Element brElement = scheduleDoc.createElement(HTML.Tag.BR.toString());
+
+                        //THEN LECTURE TOPIC TEXT
+                        Text lectureTopicText = scheduleDoc.createTextNode(lecture.getTopic());
+                        //NEED TO CHECK IF THIS IS A CONT LECTURE
+                        if(numberOfSessionsRemaining!=lecture.getSessions()){
+                            lectureTopicText = scheduleDoc.createTextNode(lecture.getTopic()+CONT_LECTURE);
+                        }
+                        numberOfSessionsRemaining--;
+
+                        //CHECK IF I NEED TO MOVE ONTO THE NEXT LECTURE
+                        if (numberOfSessionsRemaining == 0) {
+                            //MAKE SURE WE STILL HAVE LECTURES LEFT
+                            if (lectureIterator.hasNext()) {
+                                lecture = (Lecture) lectureIterator.next();
+                                //RESET numberOfSessionRemaining
+                                numberOfSessionsRemaining = lecture.getSessions();
+                            }
+                        }
+                        //NOW ADD THE LECTURE TO THE DAYCELL
+                        dayCell.appendChild(lectureSpanElement);
+                        dayCell.appendChild(brElement);
+                        dayCell.appendChild(lectureTopicText);
+                        // AND NOW ADD 4 LINE BREAKS
+                        for (int brCounter = 0; brCounter < 4; brCounter++) {
+                            Element br = scheduleDoc.createElement(HTML.Tag.BR.toString());
+                            dayCell.appendChild(br);
+                        }
+                        //INCREMENT THE LECTURE NUMBER WE ARE ON
+                        lectureCounter++;
+                    }
                 }
 
-                // FIRST SCHEDULE ITEMS
+                //NOW CHECK FOR ASSIGNMENTS
+                Assignment assignment = assignmentMappings.get(countingDate);
+                if (assignment != null) {
+                    //ADD ASSIGNMENT NAME AND DUE_HEADER
+
+                    //FIRST CREATE SPAN TO PLACE ASSIGNMENT NAME
+                    Element assignmentNameSpan = scheduleDoc.createElement(HTML.Tag.SPAN.toString());
+                    assignmentNameSpan.setAttribute(HTML.Attribute.CLASS.toString(), CLASS_HW);
+
+                    //NOW CREATE TEXTNODE TO HOLD ASSIGNMENT NUMBER AND ADD TO SPAN
+                    Text assignmentNumberText = scheduleDoc.createTextNode(assignment.getName());
+                    assignmentNameSpan.appendChild(assignmentNumberText);
+
+                    //NOW WE MAKE A LINE BREAK AND ADD THE DUE HEADER AND ASSIGNMENT NAME
+                    Element assignmentBrElement = scheduleDoc.createElement(HTML.Tag.BR.toString());
+                    Text assignmentDueText = scheduleDoc.createTextNode(DUE_HEADER);
+                    Element anotherBrElement = scheduleDoc.createElement(HTML.Tag.BR.toString());
+                    Text assignmentTopicText = scheduleDoc.createTextNode(OPEN_PARENTH + assignment.getTopics() + CLOSE_PARENTH);
+                    //NOW ADD TO DAYCELL
+                    dayCell.appendChild(assignmentNameSpan);
+                    dayCell.appendChild(assignmentBrElement);
+                    dayCell.appendChild(assignmentDueText);
+                    dayCell.appendChild(anotherBrElement);
+                    dayCell.appendChild(assignmentTopicText);
+                    // AND NOW ADD 2 LINE BREAKS
+                    for (int brCounter = 0; brCounter < 2; brCounter++) {
+                        Element br = scheduleDoc.createElement(HTML.Tag.BR.toString());
+                        dayCell.appendChild(br);
+                    }
+                }
+                // MOVE ONTO THE NEXT DAY
                 countingDate = countingDate.plusDays(1);
             }
 
@@ -474,8 +630,10 @@ public class CourseSiteExporter {
         for (int i = 0; i < nodes.getLength(); i++) {
             Node testNode = nodes.item(i);
             Node testAttr = testNode.getAttributes().getNamedItem(HTML.Attribute.ID.toString());
-            if (testAttr.getNodeValue().equals(searchID)) {
-                return testNode;
+            if(testAttr != null){
+                if (testAttr.getNodeValue().equals(searchID)) {
+                    return testNode;
+                }
             }
         }
         return null;
