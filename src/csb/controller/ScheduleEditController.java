@@ -49,6 +49,9 @@ public class ScheduleEditController {
             
             // AND ADD IT AS A ROW TO THE TABLE
             course.addScheduleItem(si);
+            
+            //COURSE IS NOW DIRTY AND THUS CAN BE SAVED
+            gui.getFileController().markAsEdited(gui);
         }
         else {
             // THE USER MUST HAVE PRESSED CANCEL, SO
@@ -71,6 +74,9 @@ public class ScheduleEditController {
             
             //update gui
             course.getScheduleItems().set(course.getScheduleItems().indexOf(itemToEdit), si);
+            
+            //COURSE IS NOW DIRTY AND THUS CAN BE SAVED
+            gui.getFileController().markAsEdited(gui);
         }
         else {
             // THE USER MUST HAVE PRESSED CANCEL, SO
@@ -88,6 +94,8 @@ public class ScheduleEditController {
         // IF THE USER SAID YES, THEN SAVE BEFORE MOVING ON
         if (selection.equals(YesNoCancelDialog.YES)) { 
             gui.getDataManager().getCourse().removeScheduleItem(itemToRemove);
+             //COURSE IS NOW DIRTY AND THUS CAN BE SAVED
+            gui.getFileController().markAsEdited(gui);
         }
     }
     public void handleAddLectureRequest(CSB_GUI gui) {
@@ -102,6 +110,9 @@ public class ScheduleEditController {
             
             // AND ADD IT AS A ROW TO THE TABLE
             course.addLecture(lecture);
+            
+             //COURSE IS NOW DIRTY AND THUS CAN BE SAVED
+            gui.getFileController().markAsEdited(gui);
         }
         else {
             // THE USER MUST HAVE PRESSED CANCEL, SO
@@ -123,7 +134,9 @@ public class ScheduleEditController {
             
             //update gui
             course.getLectures().set(course.getLectures().indexOf(itemToEdit), lecture);
-        
+            
+             //COURSE IS NOW DIRTY AND THUS CAN BE SAVED
+            gui.getFileController().markAsEdited(gui);
         }
         else {
             // THE USER MUST HAVE PRESSED CANCEL, SO
@@ -141,6 +154,8 @@ public class ScheduleEditController {
         // IF THE USER SAID YES, THEN SAVE BEFORE MOVING ON
         if (selection.equals(YesNoCancelDialog.YES)) { 
             gui.getDataManager().getCourse().removeLecture(lectureToRemove);
+             //COURSE IS NOW DIRTY AND THUS CAN BE SAVED
+            gui.getFileController().markAsEdited(gui);
         }
     }
         
@@ -159,7 +174,9 @@ public class ScheduleEditController {
             
             //update gui
             course.getAssignments().set(course.getAssignments().indexOf(assignmentToEdit), assignment);
-        
+            
+            //COURSE IS NOW DIRTY AND THUS CAN BE SAVED
+            gui.getFileController().markAsEdited(gui);
         }
         else {
             // THE USER MUST HAVE PRESSED CANCEL, SO
@@ -178,6 +195,9 @@ public class ScheduleEditController {
             
             // AND ADD IT AS A ROW TO THE TABLE
             course.addAssignment(assignment);
+            
+             //COURSE IS NOW DIRTY AND THUS CAN BE SAVED
+            gui.getFileController().markAsEdited(gui);
         }
         else {
             // THE USER MUST HAVE PRESSED CANCEL, SO
@@ -195,6 +215,8 @@ public class ScheduleEditController {
         // IF THE USER SAID YES, THEN SAVE BEFORE MOVING ON
         if (selection.equals(YesNoCancelDialog.YES)) { 
             gui.getDataManager().getCourse().removeAssignment(assignmentToRemove);
+             //COURSE IS NOW DIRTY AND THUS CAN BE SAVED
+            gui.getFileController().markAsEdited(gui);
         }
     }
 
@@ -220,6 +242,9 @@ public class ScheduleEditController {
             Lecture tempLecture = course.getLectures().get(index+1);
             course.getLectures().set(index+1, lecture);
             course.getLectures().set(index, tempLecture);
+            
+             //COURSE IS NOW DIRTY AND THUS CAN BE SAVED
+            gui.getFileController().markAsEdited(gui);
         }
     }
 }
