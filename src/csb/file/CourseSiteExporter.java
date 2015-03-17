@@ -7,6 +7,8 @@ import csb.data.CoursePage;
 import csb.data.Instructor;
 import csb.data.Lecture;
 import csb.data.ScheduleItem;
+import csb.gui.CSB_GUI;
+import csb.gui.ExportProgressBar;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -19,6 +21,15 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import javafx.collections.ObservableList;
+import javafx.concurrent.Task;
+import javafx.geometry.Insets;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.ProgressBar;
+import javafx.scene.layout.GridPane;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 import javax.swing.text.html.HTML;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -70,7 +81,7 @@ public class CourseSiteExporter {
     public static final String CLASS_LECTURE = "lecture";
     public static final String CLASS_HW = "hw";
     public static final String CLASS_HWS = "hws";
-    
+
     // THIS IS TEXT WE'LL BE ADDING TO OUR PAGE
     public static final String INDEX_HEADER = "Home";
     public static final String SYLLABUS_HEADER = "Syllabus";
@@ -106,13 +117,17 @@ public class CourseSiteExporter {
     public static final String SLASH = "/";
     public static final String DASH = " - ";
     public static final String LINE_BREAK = "<br />";
+    public static final String EXPORT_TEXT = "Exporting ";
+    public static final String EXPORT_TEXT_COMPLETE = "Export Complete ";
+    public static final String PAGE_TEXT = " Page";
 
     //THIS IS TO CHANGE THE HOMEWORK PAGES TABEL COLOR
     public static final int BASE_RED = 240;
     public static final int BASE_GREEN = 240;
     public static final int BASE_BLUE = 255;
     public static final String COLOR_STYLE = "background-color:rgb";
-    
+
+    public boolean isComplete = false;
     // THESE ARE THE DIRECTORIES WHERE OUR BASE SCHEDULE
     // FILE IS AND WHERE OUR COURSE SITES WILL BE EXPORTED TO
     String baseDir;
@@ -148,7 +163,8 @@ public class CourseSiteExporter {
      * @throws IOException This exception is thrown when a problem occurs
      * creating the course site directory and/or files.
      */
-    public void exportCourseSite(Course courseToExport) throws Exception {
+    public void exportCourseSite(Course courseToExport, Stage primaryStage) throws Exception {
+        isComplete = false;
         // GET THE DIRECTORY TO EXPORT THE SITE
         String courseExportPath = (new File(sitesDir) + SLASH)
                 + courseToExport.getSubject() + courseToExport.getNumber();
@@ -158,14 +174,44 @@ public class CourseSiteExporter {
         if (!new File(courseExportPath).exists()) {
             setupCourseSite(courseExportPath);
         }
-
         CoursePage[] pages = CoursePage.values();
-        for (pageIndex = 0; pageIndex < pages.length; pageIndex++) {
-            if (courseToExport.hasCoursePage(pages[pageIndex])) {
-                // CALCULATE THE PROGRESS
-                exportPage(pages[pageIndex], courseToExport, courseExportPath);
+        Task task = new Task() {
+
+            @Override
+            protected Object call() throws Exception {
+                int remainingPages = courseToExport.getPages().size() - 1;
+                int numberOfPages = remainingPages + 1;
+
+                for (pageIndex = 0; pageIndex < pages.length; pageIndex++) {
+                    if (courseToExport.hasCoursePage(pages[pageIndex])) {
+
+                        // CALCULATE THE PROGRESS
+                        updateMessage(EXPORT_TEXT + pages[pageIndex].name() + PAGE_TEXT);
+                        exportPage(pages[pageIndex], courseToExport, courseExportPath);
+                        Thread.sleep(1000);
+                        updateProgress((numberOfPages - remainingPages) * 100 / numberOfPages, 100);
+                        
+                        if (remainingPages == 0) {
+                            updateMessage(EXPORT_TEXT_COMPLETE);
+                        } else {
+                            updateMessage(EXPORT_TEXT + pages[pageIndex].name() + PAGE_TEXT);
+                        }
+                        remainingPages--;
+                    }
+                }
+                return null;
             }
+        };
+        ExportProgressBar epb = new ExportProgressBar(primaryStage, task);
+        new Thread(task).start();
+        //now show and wait for progress to finish
+        epb.showAndWait();
+
+        //ok we can launch now
+        if (epb.isComplete()) {
+            isComplete = true;
         }
+
     }
 
     /**
@@ -304,45 +350,45 @@ public class CourseSiteExporter {
 
     // BUILDS A HWS PAGE AND RETURNS IT AS A SINGLE Document
     private Document buildHWsPage(Course courseToExport) throws SAXException, TransformerException, IOException, ParserConfigurationException {
-        
+
         // GET A NEW DOC
         Document hwsDoc = initDoc(courseToExport, CoursePage.HWS, HWS_PAGE);
-        
-        for(int x = 0 ; x < courseToExport.getAssignments().size() ; x++){
-            Node homeWorkTable = getNodeWithId(hwsDoc,HTML.Tag.TABLE.toString(),ID_HWS);
+
+        for (int x = 0; x < courseToExport.getAssignments().size(); x++) {
+            Node homeWorkTable = getNodeWithId(hwsDoc, HTML.Tag.TABLE.toString(), ID_HWS);
             //FIRST CREATE TR
             Element trElement = hwsDoc.createElement(HTML.Tag.TR.toString());
             trElement.setAttribute(HTML.Attribute.CLASS.toString(), CLASS_HWS);
-            setColorStyle(trElement,BASE_RED-(x*10),BASE_GREEN-(x*10),BASE_BLUE-(x*10));
-            
+            setColorStyle(trElement, BASE_RED - (x * 10), BASE_GREEN - (x * 10), BASE_BLUE - (x * 10));
+
             //NOW CREATE TD TO HOLD NAME AND TOPIC
-             Element nameAndTopicTd = hwsDoc.createElement(HTML.Tag.TD.toString());
+            Element nameAndTopicTd = hwsDoc.createElement(HTML.Tag.TD.toString());
             nameAndTopicTd.appendChild(hwsDoc.createElement(HTML.Tag.BR.toString()));
             nameAndTopicTd.setAttribute(HTML.Attribute.CLASS.toString(), CLASS_HWS);
             Text nameAndTopicText = hwsDoc.createTextNode(courseToExport.getAssignments().get(x).getName()
-                +DASH+courseToExport.getAssignments().get(x).getTopics());
+                    + DASH + courseToExport.getAssignments().get(x).getTopics());
             nameAndTopicTd.appendChild(nameAndTopicText);
             nameAndTopicTd.appendChild(hwsDoc.createElement(HTML.Tag.BR.toString()));
             nameAndTopicTd.appendChild(hwsDoc.createElement(HTML.Tag.BR.toString()));
-            
+
             //NOW CREATE TD TO HOLD DUE DATE
             Element dueDateTd = hwsDoc.createElement(HTML.Tag.TD.toString());
             dueDateTd.appendChild(hwsDoc.createElement(HTML.Tag.BR.toString()));
             dueDateTd.setAttribute(HTML.Attribute.CLASS.toString(), CLASS_HWS);
             Text dueDateText = hwsDoc.createTextNode(courseToExport.getAssignments().get(x).getDate().getDayOfWeek()
                     .toString().charAt(0)
-                +courseToExport.getAssignments().get(x).getDate().getDayOfWeek().toString()
-                    .substring(1,courseToExport.getAssignments().get(x).getDate().getDayOfWeek().toString().length()).toLowerCase()
-                +COMMA
-                +courseToExport.getAssignments().get(x).getDate().getMonthValue()
-                +SLASH
-                +courseToExport.getAssignments()
-                    .get(x).getDate().getDayOfMonth()+DUE_TIME);
-            
+                    + courseToExport.getAssignments().get(x).getDate().getDayOfWeek().toString()
+                    .substring(1, courseToExport.getAssignments().get(x).getDate().getDayOfWeek().toString().length()).toLowerCase()
+                    + COMMA
+                    + courseToExport.getAssignments().get(x).getDate().getMonthValue()
+                    + SLASH
+                    + courseToExport.getAssignments()
+                    .get(x).getDate().getDayOfMonth() + DUE_TIME);
+
             dueDateTd.appendChild(dueDateText);
             dueDateTd.appendChild(hwsDoc.createElement(HTML.Tag.BR.toString()));
             dueDateTd.appendChild(hwsDoc.createElement(HTML.Tag.BR.toString()));
-            
+
             //NOW CREATE TD TO HOLD GRADING CRITERIA
             Element gradingTd = hwsDoc.createElement(HTML.Tag.TD.toString());
             gradingTd.appendChild(hwsDoc.createElement(HTML.Tag.BR.toString()));
@@ -351,25 +397,27 @@ public class CourseSiteExporter {
             gradingTd.appendChild(gradingText);
             gradingTd.appendChild(hwsDoc.createElement(HTML.Tag.BR.toString()));
             gradingTd.appendChild(hwsDoc.createElement(HTML.Tag.BR.toString()));
-            
+
             //NOW ADD IT ALL TO TR
             trElement.appendChild(nameAndTopicTd);
             trElement.appendChild(dueDateTd);
             trElement.appendChild(gradingTd);
-            
+
             //FINALLY ADD TR TO TABLE
-            
             homeWorkTable.appendChild(trElement);
         }
-        
+
         // MISSING UPDATING THE TABLE
         // AND RETURN THE FULL PAGE DOM
         return hwsDoc;
     }
-    private void setColorStyle(Element element, int red,int green, int blue){
-        element.setAttribute(HTML.Attribute.STYLE.toString(), COLOR_STYLE+OPEN_PARENTH+red+COMMA+green+COMMA+blue+CLOSE_PARENTH);
+
+    private void setColorStyle(Element element, int red, int green, int blue) {
+        element.setAttribute(HTML.Attribute.STYLE.toString(), COLOR_STYLE + OPEN_PARENTH + red + COMMA + green + COMMA + blue + CLOSE_PARENTH);
     }
+
     // BUILDS A HWS PAGE AND RETURNS IT AS A SINGLE Document
+
     private Document buildProjectsPage(Course courseToExport) throws SAXException, TransformerException, IOException, ParserConfigurationException {
         // GET A NEW DOC
         Document projectsDoc = initDoc(courseToExport, CoursePage.PROJECTS, PROJECTS_PAGE);
@@ -490,7 +538,7 @@ public class CourseSiteExporter {
                         Element lectureSpanElement = scheduleDoc.createElement(HTML.Tag.SPAN.toString());
                         lectureSpanElement.setAttribute(HTML.Attribute.CLASS.toString(), CLASS_LECTURE);
                         Text lectureNumberText = scheduleDoc.createTextNode(LECTURE_HEADER + lectureCounter);
-                        
+
                         //ADD LECTURE TOPIC TO SPAN
                         lectureSpanElement.appendChild(lectureNumberText);
 
@@ -500,8 +548,8 @@ public class CourseSiteExporter {
                         //THEN LECTURE TOPIC TEXT
                         Text lectureTopicText = scheduleDoc.createTextNode(lecture.getTopic());
                         //NEED TO CHECK IF THIS IS A CONT LECTURE
-                        if(numberOfSessionsRemaining!=lecture.getSessions()){
-                            lectureTopicText = scheduleDoc.createTextNode(lecture.getTopic()+CONT_LECTURE);
+                        if (numberOfSessionsRemaining != lecture.getSessions()) {
+                            lectureTopicText = scheduleDoc.createTextNode(lecture.getTopic() + CONT_LECTURE);
                         }
                         numberOfSessionsRemaining--;
 
@@ -630,7 +678,7 @@ public class CourseSiteExporter {
         for (int i = 0; i < nodes.getLength(); i++) {
             Node testNode = nodes.item(i);
             Node testAttr = testNode.getAttributes().getNamedItem(HTML.Attribute.ID.toString());
-            if(testAttr != null){
+            if (testAttr != null) {
                 if (testAttr.getNodeValue().equals(searchID)) {
                     return testNode;
                 }

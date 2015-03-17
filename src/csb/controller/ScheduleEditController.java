@@ -12,6 +12,7 @@ import csb.gui.LectureDialog;
 import csb.gui.MessageDialog;
 import csb.gui.ScheduleItemDialog;
 import csb.gui.YesNoCancelDialog;
+import java.util.Collections;
 import javafx.scene.control.TableView;
 import javafx.stage.Stage;
 import properties_manager.PropertiesManager;
@@ -74,7 +75,7 @@ public class ScheduleEditController {
             
             //update gui
             course.getScheduleItems().set(course.getScheduleItems().indexOf(itemToEdit), si);
-            
+            Collections.sort(course.getScheduleItems());
             //COURSE IS NOW DIRTY AND THUS CAN BE SAVED
             gui.getFileController().markAsEdited(gui);
         }
@@ -174,7 +175,7 @@ public class ScheduleEditController {
             
             //update gui
             course.getAssignments().set(course.getAssignments().indexOf(assignmentToEdit), assignment);
-            
+            Collections.sort(course.getAssignments());
             //COURSE IS NOW DIRTY AND THUS CAN BE SAVED
             gui.getFileController().markAsEdited(gui);
         }

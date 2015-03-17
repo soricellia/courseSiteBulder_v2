@@ -7,6 +7,7 @@ import static csb.gui.CSB_GUI.CLASS_HEADING_LABEL;
 import static csb.gui.CSB_GUI.CLASS_PROMPT_LABEL;
 import static csb.gui.CSB_GUI.PRIMARY_STYLE_SHEET;
 import java.time.LocalDate;
+import java.util.Collections;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;

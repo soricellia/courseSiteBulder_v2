@@ -50,7 +50,7 @@ public class CSB_Test_SiteExporterAndWebBrowser extends Application {
             fileManager.loadCourse(testCourse, jsonPath);
             
             // AND NOW EXPORT THE SITE
-            exporter.exportCourseSite(testCourse);
+            exporter.exportCourseSite(testCourse,primaryStage);
 
             // NOW OPEN OUR EXPORTED COURSE IN OUR BROWSER
             String coursePagePath = exporter.getPageURLPath(testCourse, CoursePage.SCHEDULE);

@@ -13,6 +13,7 @@ import csb.error.ErrorHandler;
 import csb.file.CourseFileManager;
 import csb.file.CourseSiteExporter;
 import csb.gui.CSB_GUI;
+import csb.gui.ExportProgressBar;
 import csb.gui.MessageDialog;
 import csb.gui.WebBrowser;
 import csb.gui.YesNoCancelDialog;
@@ -205,12 +206,13 @@ public class FileController {
         try {            
             
             // AND EXPORT THE COURSE
-            exporter.exportCourseSite(courseToExport);
-            
-            // AND THEN OPEN UP THE PAGE IN A BROWSER
-            Stage webBrowserStage = new Stage();
-            WebBrowser webBrowser = new WebBrowser(webBrowserStage, courseURL);
-            webBrowserStage.show();
+            exporter.exportCourseSite(courseToExport, gui.getWindow());
+            if(exporter.isComplete){
+                // AND THEN OPEN UP THE PAGE IN A BROWSER
+                Stage webBrowserStage = new Stage();
+                WebBrowser webBrowser = new WebBrowser(webBrowserStage, courseURL);
+                webBrowserStage.show();
+            }
         }
         // WE'LL HANDLE COURSE EXPORT PROBLEMS AND COURSE PAGE VIEWING
         // PROBLEMS USING DIFFERENT ERROR MESSAGES
