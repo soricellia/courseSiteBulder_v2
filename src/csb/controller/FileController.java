@@ -126,7 +126,6 @@ public class FileController {
                 // REFRESH THE GUI, WHICH WILL ENABLE AND DISABLE
                 // THE APPROPRIATE CONTROLS
                 gui.updateToolbarControls(saved);
-
                 // TELL THE USER THE COURSE HAS BEEN CREATED
                 messageDialog.show(properties.getProperty(NEW_COURSE_CREATED_MESSAGE));
             }

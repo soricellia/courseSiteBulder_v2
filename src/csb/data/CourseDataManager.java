@@ -65,8 +65,12 @@ public class CourseDataManager {
         course.clearLectureDays();
         course.clearPages();
         
+        course.getAssignments().clear();
+        course.getScheduleItems().clear();
+        course.getLectures().clear();
         // AND THEN FORCE THE UI TO RELOAD THE UPDATED COURSE
         view.reloadCourse(course);
+        
     }
     
     // PRIVATE HELPER METHODS

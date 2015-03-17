@@ -204,6 +204,7 @@ public class CourseSiteExporter {
         };
         ExportProgressBar epb = new ExportProgressBar(primaryStage, task);
         new Thread(task).start();
+        
         //now show and wait for progress to finish
         epb.showAndWait();
 
