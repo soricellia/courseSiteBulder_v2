@@ -16,6 +16,7 @@ public class Assignment implements Comparable{
     final StringProperty name;
     final StringProperty topics;
     final ObjectProperty<LocalDate> date;
+    
     public static final String DEFAULT_NAME = "<ENTER NAME>";
     public static final String DEFAULT_TOPICS = "<ENTER TOPICS>";
     

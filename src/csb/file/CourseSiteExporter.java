@@ -482,8 +482,13 @@ public class CourseSiteExporter {
         //THIS IS FOR ADDING LECTURES
         List<Lecture> lectureList = courseToExport.getLectureList();
         ListIterator lectureIterator = lectureList.listIterator();
-        Lecture lecture = (Lecture) lectureIterator.next();
-        int numberOfSessionsRemaining = lecture.getSessions();
+        
+        Lecture lecture = new Lecture();
+        int numberOfSessionsRemaining = 0;
+        if(lectureIterator.hasNext()){
+            lecture = (Lecture) lectureIterator.next();
+            numberOfSessionsRemaining = lecture.getSessions();
+        }
         boolean isMoreSessions = true;
 
         while (countingDate.isBefore(courseToExport.getEndingFriday())
